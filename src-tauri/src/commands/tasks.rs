@@ -50,8 +50,6 @@ pub async fn create_task(
     let position = get_next_position(&pool, input.parent_id, input.category_id).await?;
     let title_trimmed = input.title.trim();
 
-    println!("Creating task: {}", title_trimmed);
-
     let task = sqlx::query_as::<_, Task>(
         r#"
         INSERT INTO tasks (title, description, category_id, priority, parent_id, position, due_date, created_at, updated_at)
