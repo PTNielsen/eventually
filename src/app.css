@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  /* Terminal color palette */
+  --color-terminal-bg: #1a1b26;
+  --color-terminal-fg: #c0caf5;
+  --color-terminal-black: #15161e;
+  --color-terminal-red: #f7768e;
+  --color-terminal-green: #9ece6a;
+  --color-terminal-yellow: #e0af68;
+  --color-terminal-blue: #7aa2f7;
+  --color-terminal-magenta: #bb9af7;
+  --color-terminal-cyan: #7dcfff;
+  --color-terminal-white: #a9b1d6;
+  --color-terminal-bright-black: #414868;
+  --color-terminal-bright-red: #f7768e;
+  --color-terminal-bright-green: #9ece6a;
+  --color-terminal-bright-yellow: #e0af68;
+  --color-terminal-bright-blue: #7aa2f7;
+  --color-terminal-bright-magenta: #bb9af7;
+  --color-terminal-bright-cyan: #7dcfff;
+  --color-terminal-bright-white: #c0caf5;
+
+  /* Font family */
+  --font-family-mono: JetBrains Mono, Menlo, Monaco, Courier New, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-terminal-bg text-terminal-fg font-mono antialiased;
+  }
+
+  * {
+    @apply border-terminal-bright-black/30;
+  }
+
+  /* Smooth scrolling */
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Terminal-style panel with depth */
+  .terminal-panel {
+    @apply bg-terminal-black border border-terminal-bright-black/50 rounded-lg shadow-lg shadow-black/20 transition-all duration-200;
+  }
+
+  .terminal-panel:hover {
+    @apply shadow-xl shadow-black/30 border-terminal-bright-black/70;
+  }
+
+  /* Terminal-style input with glow on focus */
+  .terminal-input {
+    @apply bg-terminal-black border border-terminal-bright-black/50 text-terminal-fg placeholder-terminal-bright-black rounded-md px-3 py-2 font-mono transition-all duration-200 outline-none;
+  }
+
+  .terminal-input:focus {
+    @apply border-terminal-blue ring-2 ring-terminal-blue/30 shadow-lg shadow-terminal-blue/10;
+  }
+
+  .terminal-input:hover:not(:focus) {
+    @apply border-terminal-bright-black/70 bg-terminal-black;
+  }
+
+  /* Terminal-style button with smooth transitions */
+  .terminal-button {
+    @apply bg-terminal-black border border-terminal-bright-black/50 text-terminal-fg hover:bg-terminal-bright-black/30 hover:border-terminal-blue active:bg-terminal-bright-black/50 active:scale-95 px-4 py-2 rounded-md font-mono transition-all duration-150 cursor-pointer select-none;
+  }
+
+  .terminal-button:hover {
+    @apply shadow-md shadow-terminal-blue/10;
+  }
+
+  .terminal-button-primary {
+    @apply bg-terminal-blue border-terminal-blue text-terminal-bg font-semibold hover:bg-terminal-bright-blue hover:border-terminal-bright-blue shadow-md shadow-terminal-blue/20;
+  }
+
+  .terminal-button-primary:hover {
+    @apply shadow-lg shadow-terminal-blue/30;
+  }
+
+  .terminal-button:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-terminal-black hover:border-terminal-bright-black/50 hover:shadow-none active:scale-100;
+  }
+
+  /* Priority badges with subtle glow */
+  .priority-urgent {
+    @apply text-terminal-red border border-terminal-red/50 bg-terminal-red/5 shadow-sm shadow-terminal-red/20;
+  }
+
+  .priority-high {
+    @apply text-terminal-yellow border border-terminal-yellow/50 bg-terminal-yellow/5 shadow-sm shadow-terminal-yellow/20;
+  }
+
+  .priority-medium {
+    @apply text-terminal-blue border border-terminal-blue/50 bg-terminal-blue/5 shadow-sm shadow-terminal-blue/20;
+  }
+
+  .priority-low {
+    @apply text-terminal-bright-black border border-terminal-bright-black/30 bg-terminal-bright-black/5;
+  }
+
+  /* Deadline indicators with glow */
+  .deadline-overdue {
+    @apply text-terminal-red border border-terminal-red/50 bg-terminal-red/10 shadow-sm shadow-terminal-red/30 animate-pulse;
+  }
+
+  .deadline-soon {
+    @apply text-terminal-yellow border border-terminal-yellow/50 bg-terminal-yellow/10 shadow-sm shadow-terminal-yellow/30;
+  }
+
+  .deadline-ok {
+    @apply text-terminal-green border border-terminal-green/50 bg-terminal-green/5 shadow-sm shadow-terminal-green/20;
+  }
+
+  /* Smooth fade-in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Pulse animation for overdue tasks */
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+}

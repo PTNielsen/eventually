@@ -1,0 +1,20 @@
+# Lefthook configuration for eventually
+# See https://github.com/evilmartians/lefthook for documentation
+
+pre-commit:
+  parallel: true
+  commands:
+    # Lint and format TypeScript/Svelte files
+    lint:
+      glob: "*.{js,ts,svelte,json,css}"
+      run: pnpm biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    # Type check
+    typecheck:
+      glob: "*.{ts,svelte}"
+      run: pnpm check
+
+    # Run tests
+    test:
+      run: pnpm test
