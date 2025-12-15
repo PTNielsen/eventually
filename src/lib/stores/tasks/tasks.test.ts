@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import * as taskApi from "$lib/api/tasks/tasks"
 import type { Task } from "$lib/types/models"
 import { toastStore } from "../toast/toast"
-import { undoStore } from "../undo/undo"
 import { tasksStore } from "./tasks"
 
 vi.mock("$lib/api/tasks/tasks")
@@ -27,7 +26,6 @@ describe("tasksStore", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     toastStore.clear()
-    undoStore.clear()
   })
 
   it("creates task and updates state", async () => {
@@ -55,18 +53,6 @@ describe("tasksStore", () => {
 
     const toasts = get(toastStore)
     expect(toasts.some((t) => t.type === "success")).toBe(true)
-  })
-
-  it("tracks undo action on create", async () => {
-    vi.mocked(taskApi.createTask).mockResolvedValue(mockTask)
-    vi.mocked(taskApi.getTaskTree).mockResolvedValue([])
-
-    await tasksStore.createTask({
-      title: "Buy groceries",
-      priority: "Medium",
-    })
-
-    expect(undoStore.canUndo()).toBe(true)
   })
 
   it("updates task in state", async () => {

@@ -1,7 +1,6 @@
 <script lang="ts">
 import QuickEntry from "$lib/components/quick-entry/QuickEntry.svelte"
 import TaskList from "$lib/components/task-list/TaskList.svelte"
-import UndoRedo from "$lib/components/undo-redo/UndoRedo.svelte"
 
 // Global keyboard shortcut to focus quick entry
 function handleGlobalKeydown(e: KeyboardEvent) {
@@ -38,16 +37,14 @@ function handleGlobalKeydown(e: KeyboardEvent) {
       <p class="text-terminal-bright-black">
         <span class="text-terminal-bright-black/50">//</span> stuff you should probably do
       </p>
-      <div class="text-terminal-bright-black/70 text-xs mt-3 space-y-1">
+      <div class="text-terminal-bright-black/70 text-xs mt-3">
         <p><span class="text-terminal-bright-black">⌘+k</span> to focus quick entry</p>
-        <p><span class="text-terminal-bright-black">⌘+z</span> undo · <span class="text-terminal-bright-black">⌘+shift+z</span> redo</p>
       </div>
     </div>
   </header>
 
   <main class="space-y-6">
     <QuickEntry />
-    <UndoRedo />
     <TaskList />
   </main>
 </div>

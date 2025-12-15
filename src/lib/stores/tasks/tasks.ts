@@ -1,8 +1,7 @@
-import { derived, get, writable } from "svelte/store"
+import { derived, writable } from "svelte/store"
 import * as taskApi from "$lib/api/tasks/tasks"
 import type { CreateTaskInput, Task, TaskTree, UpdateTaskInput } from "$lib/types/models"
 import { toastStore } from "../toast/toast"
-import { undoStore } from "../undo/undo"
 
 interface TasksState {
   tasks: Task[]
@@ -56,8 +55,6 @@ function createTasksStore() {
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
 
-        // Track for undo
-        undoStore.addAction({ type: "CREATE_TASK", task })
         toastStore.success("Task created")
 
         return task
@@ -71,10 +68,6 @@ function createTasksStore() {
 
     updateTask: async (id: number, input: UpdateTaskInput) => {
       try {
-        // Get current state for undo
-        const currentState = get({ subscribe })
-        const before = currentState.tasks.find((t) => t.id === id)
-
         const updated = await taskApi.updateTask(id, input)
         update((state) => ({
           ...state,
@@ -88,10 +81,6 @@ function createTasksStore() {
           update((state) => ({ ...state, taskTree }))
         }
 
-        // Track for undo
-        if (before) {
-          undoStore.addAction({ type: "UPDATE_TASK", taskId: id, before, after: updated })
-        }
         toastStore.success("Task updated")
 
         return updated
@@ -105,11 +94,6 @@ function createTasksStore() {
 
     deleteTask: async (id: number) => {
       try {
-        // Get current state for undo
-        const currentState = get({ subscribe })
-        const task = currentState.tasks.find((t) => t.id === id)
-        const subtasks = currentState.tasks.filter((t) => t.parent_id === id)
-
         await taskApi.deleteTask(id)
         update((state) => ({
           ...state,
@@ -119,10 +103,6 @@ function createTasksStore() {
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
 
-        // Track for undo
-        if (task) {
-          undoStore.addAction({ type: "DELETE_TASK", task, subtasks })
-        }
         toastStore.success("Task deleted")
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to delete task"
@@ -134,11 +114,6 @@ function createTasksStore() {
 
     toggleDone: async (id: number, isDone: boolean) => {
       try {
-        // Get current state for undo
-        const currentState = get({ subscribe })
-        const task = currentState.tasks.find((t) => t.id === id)
-        const before = task?.is_done ?? false
-
         const updated = await taskApi.updateTask(id, { is_done: isDone })
         update((state) => ({
           ...state,
@@ -148,8 +123,6 @@ function createTasksStore() {
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
 
-        // Track for undo
-        undoStore.addAction({ type: "TOGGLE_TASK", taskId: id, before, after: isDone })
         toastStore.success(isDone ? "Task completed" : "Task marked incomplete")
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to toggle task"
