@@ -1,10 +1,15 @@
 <script lang="ts">
 import { onMount } from "svelte"
-import { categoriesStore } from "$lib/stores/categories"
-import { sortedTaskTree, tasksByCategory, tasksByPriority, tasksStore } from "$lib/stores/tasks"
-import { uiStore } from "$lib/stores/ui"
-import type { TaskTree } from "$lib/types/models"
-import TaskItem from "./TaskItem.svelte"
+import { categoriesStore } from "$lib/stores/categories/categories"
+import {
+  sortedTaskTree,
+  tasksByCategory,
+  tasksByPriority,
+  tasksStore,
+} from "$lib/stores/tasks/tasks"
+import { uiStore } from "$lib/stores/ui/ui"
+import type { TaskTree } from "$lib/types/models.d"
+import TaskItem from "../task-item/TaskItem.svelte"
 
 onMount(async () => {
   // Load categories first, then tasks (so category names are available when tasks render)
@@ -45,11 +50,16 @@ function findTaskTree(taskId: number): TaskTree | null {
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-xs text-terminal-brightBlack">view:</span>
+          <label for="view-select" class="text-xs text-terminal-brightBlack">view:</label>
           <select
+            id="view-select"
             class="terminal-input text-xs py-1 px-2"
             value={$uiStore.groupBy}
-            on:change={(e) => uiStore.setGroupBy(e.currentTarget.value as any)}
+            on:change={(e) => {
+              const value = e.currentTarget.value as "none" | "category" | "priority"
+              uiStore.setGroupBy(value)
+            }}
+            aria-label="Select view mode"
           >
             <option value="none">tree</option>
             <option value="category">category</option>
@@ -60,6 +70,8 @@ function findTaskTree(taskId: number): TaskTree | null {
         <button
           class="text-xs text-terminal-brightBlack hover:text-terminal-fg transition-colors"
           on:click={() => uiStore.toggleShowCompleted()}
+          aria-label="{$uiStore.showCompleted ? 'Hide' : 'Show'} completed tasks"
+          aria-pressed={$uiStore.showCompleted}
         >
           [{$uiStore.showCompleted ? '×' : ' '}] show completed
         </button>

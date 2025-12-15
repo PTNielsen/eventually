@@ -1,6 +1,8 @@
-import { derived, writable } from "svelte/store"
-import * as taskApi from "$lib/api/tasks"
+import { derived, get, writable } from "svelte/store"
+import * as taskApi from "$lib/api/tasks/tasks"
 import type { CreateTaskInput, Task, TaskTree, UpdateTaskInput } from "$lib/types/models"
+import { toastStore } from "../toast/toast"
+import { undoStore } from "../undo/undo"
 
 interface TasksState {
   tasks: Task[]
@@ -32,11 +34,13 @@ function createTasksStore() {
           error: null,
         }))
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load tasks"
         console.error("Failed to load tasks:", error)
+        toastStore.error(message)
         update((state) => ({
           ...state,
           loading: false,
-          error: error instanceof Error ? error.message : "Failed to load tasks",
+          error: message,
         }))
       }
     },
@@ -51,32 +55,61 @@ function createTasksStore() {
         // Reload tree to update hierarchy
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
+
+        // Track for undo
+        undoStore.addAction({ type: "CREATE_TASK", task })
+        toastStore.success("Task created")
+
         return task
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to create task"
         console.error("Failed to create task:", error)
+        toastStore.error(message)
         throw error
       }
     },
 
     updateTask: async (id: number, input: UpdateTaskInput) => {
       try {
+        // Get current state for undo
+        const currentState = get({ subscribe })
+        const before = currentState.tasks.find((t) => t.id === id)
+
         const updated = await taskApi.updateTask(id, input)
         update((state) => ({
           ...state,
           tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
         }))
-        // Reload tree to update hierarchy
-        const taskTree = await taskApi.getTaskTree()
-        update((state) => ({ ...state, taskTree }))
+
+        // Only reload tree if hierarchy changed (parent_id modified)
+        const needsTreeUpdate = input.parent_id !== undefined
+        if (needsTreeUpdate) {
+          const taskTree = await taskApi.getTaskTree()
+          update((state) => ({ ...state, taskTree }))
+        }
+
+        // Track for undo
+        if (before) {
+          undoStore.addAction({ type: "UPDATE_TASK", taskId: id, before, after: updated })
+        }
+        toastStore.success("Task updated")
+
         return updated
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update task"
         console.error("Failed to update task:", error)
+        toastStore.error(message)
         throw error
       }
     },
 
     deleteTask: async (id: number) => {
       try {
+        // Get current state for undo
+        const currentState = get({ subscribe })
+        const task = currentState.tasks.find((t) => t.id === id)
+        const subtasks = currentState.tasks.filter((t) => t.parent_id === id)
+
         await taskApi.deleteTask(id)
         update((state) => ({
           ...state,
@@ -85,24 +118,43 @@ function createTasksStore() {
         // Reload tree to update hierarchy
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
+
+        // Track for undo
+        if (task) {
+          undoStore.addAction({ type: "DELETE_TASK", task, subtasks })
+        }
+        toastStore.success("Task deleted")
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to delete task"
         console.error("Failed to delete task:", error)
+        toastStore.error(message)
         throw error
       }
     },
 
     toggleDone: async (id: number, isDone: boolean) => {
       try {
-        await taskApi.updateTask(id, { is_done: isDone })
+        // Get current state for undo
+        const currentState = get({ subscribe })
+        const task = currentState.tasks.find((t) => t.id === id)
+        const before = task?.is_done ?? false
+
+        const updated = await taskApi.updateTask(id, { is_done: isDone })
         update((state) => ({
           ...state,
-          tasks: state.tasks.map((t) => (t.id === id ? { ...t, is_done: isDone } : t)),
+          tasks: state.tasks.map((t) => (t.id === id ? updated : t)),
         }))
         // Also update in tree
         const taskTree = await taskApi.getTaskTree()
         update((state) => ({ ...state, taskTree }))
+
+        // Track for undo
+        undoStore.addAction({ type: "TOGGLE_TASK", taskId: id, before, after: isDone })
+        toastStore.success(isDone ? "Task completed" : "Task marked incomplete")
       } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to toggle task"
         console.error("Failed to toggle task:", error)
+        toastStore.error(message)
         throw error
       }
     },

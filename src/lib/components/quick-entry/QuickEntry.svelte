@@ -1,7 +1,8 @@
 <script lang="ts">
-import { categoriesStore } from "$lib/stores/categories"
-import { tasksStore } from "$lib/stores/tasks"
-import type { Priority } from "$lib/types/models"
+import { categoriesStore } from "$lib/stores/categories/categories"
+import { tasksStore } from "$lib/stores/tasks/tasks"
+import type { Priority } from "$lib/types/models.d"
+import { validateTaskTitle } from "$lib/utils/validation/validation"
 
 // Default time when no specific time is provided (end of day)
 const DEFAULT_DUE_TIME = "23:59"
@@ -9,14 +10,27 @@ const DEFAULT_DUE_TIME = "23:59"
 let title = ""
 let category: number | null = null
 let priority: Priority = "Medium"
-// Default to today's date in local timezone
-const today = new Date()
-let dueDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+// Use reactive statement to always get current date
+$: defaultDate = new Date().toISOString().split("T")[0]
+let dueDate = new Date().toISOString().split("T")[0]
 let dueTime = ""
 let isSubmitting = false
+let titleError: string | null = null
+
+// Validate title on change
+$: {
+  if (title) {
+    const validation = validateTaskTitle(title)
+    titleError = validation.valid ? null : (validation.error ?? null)
+  } else {
+    titleError = null
+  }
+}
+
+$: canSubmit = title.trim() && !titleError && !isSubmitting
 
 async function handleSubmit() {
-  if (!title.trim() || isSubmitting) return
+  if (!canSubmit) return
 
   isSubmitting = true
   try {
@@ -38,10 +52,11 @@ async function handleSubmit() {
     title = ""
     dueDate = ""
     dueTime = ""
+    titleError = null
     // Keep category and priority as defaults for next task
   } catch (error) {
     console.error("Failed to create task:", error)
-    alert("Failed to create task. Please try again.")
+    // Error notification now handled by store
   } finally {
     isSubmitting = false
   }
@@ -69,19 +84,35 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     <span class="text-terminal-brightBlack text-sm">new task</span>
   </div>
 
-  <input
-    id="task-title"
-    type="text"
-    bind:value={title}
-    placeholder="what needs to be done?"
-    class="quick-entry-input terminal-input w-full mb-3 text-base"
-    disabled={isSubmitting}
-  />
+  <div class="mb-3">
+    <input
+      id="task-title"
+      type="text"
+      bind:value={title}
+      placeholder="what needs to be done?"
+      class="quick-entry-input terminal-input w-full text-base"
+      class:border-terminal-red={titleError}
+      disabled={isSubmitting}
+      aria-label="Task title"
+      aria-invalid={!!titleError}
+      aria-describedby={titleError ? "title-error" : undefined}
+      maxlength="500"
+    />
+    {#if titleError}
+      <p id="title-error" class="text-terminal-red text-xs mt-1" role="alert">{titleError}</p>
+    {/if}
+  </div>
 
   <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
     <div>
       <label for="task-category" class="block text-xs text-terminal-brightBlack mb-1">category</label>
-      <select id="task-category" bind:value={category} class="terminal-input w-full text-sm h-10" disabled={isSubmitting}>
+      <select 
+        id="task-category" 
+        bind:value={category} 
+        class="terminal-input w-full text-sm h-10" 
+        disabled={isSubmitting}
+        aria-label="Select task category"
+      >
         <option value={null}>none</option>
         {#each $categoriesStore.categories as cat}
           <option value={cat.id}>{cat.name.toLowerCase()}</option>
@@ -91,7 +122,13 @@ function handleGlobalKeydown(e: KeyboardEvent) {
 
     <div>
       <label for="task-priority" class="block text-xs text-terminal-brightBlack mb-1">priority</label>
-      <select id="task-priority" bind:value={priority} class="terminal-input w-full text-sm h-10" disabled={isSubmitting}>
+      <select 
+        id="task-priority" 
+        bind:value={priority} 
+        class="terminal-input w-full text-sm h-10" 
+        disabled={isSubmitting}
+        aria-label="Select task priority"
+      >
         <option value="Urgent">urgent</option>
         <option value="High">high</option>
         <option value="Medium">medium</option>
@@ -127,7 +164,8 @@ function handleGlobalKeydown(e: KeyboardEvent) {
     <button
       class="terminal-button terminal-button-primary text-sm"
       on:click={handleSubmit}
-      disabled={!title.trim() || isSubmitting}
+      disabled={!canSubmit}
+      aria-label="Add new task"
     >
       {isSubmitting ? '...' : '+ add task'}
     </button>

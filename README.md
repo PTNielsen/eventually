@@ -2,14 +2,6 @@
 
 A minimalist desktop task manager with terminal aesthetics. Built with Tauri, SvelteKit, and SQLite.
 
-## Features
-
-- Hierarchical tasks with subtasks
-- Categories and priorities (Urgent/High/Medium/Low)
-- Due dates with deadline tracking
-- Keyboard shortcuts (⌘+K to focus, ⌘+Enter to submit)
-- Offline-first with local SQLite database
-
 ## Setup
 
 ```bash

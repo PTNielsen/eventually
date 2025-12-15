@@ -45,6 +45,9 @@ importers:
       '@testing-library/svelte':
         specifier: ^5.2.9
         version: 5.2.9(svelte@5.46.0)(vite@7.2.7(@types/node@20.19.27)(jiti@2.6.1)(lightningcss@1.30.2))(vitest@4.0.15)
+      '@testing-library/user-event':
+        specifier: ^14.5.2
+        version: 14.6.1(@testing-library/dom@10.4.1)
       '@vitest/ui':
         specifier: ^4.0.15
         version: 4.0.15(vitest@4.0.15)
@@ -672,6 +675,12 @@ packages:
         optional: true
       vitest:
         optional: true
+
+  '@testing-library/user-event@14.6.1':
+    resolution: {integrity: sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==}
+    engines: {node: '>=12', npm: '>=6'}
+    peerDependencies:
+      '@testing-library/dom': '>=7.21.4'
 
   '@types/aria-query@5.0.4':
     resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
@@ -1707,6 +1716,10 @@ snapshots:
     optionalDependencies:
       vite: 7.2.7(@types/node@20.19.27)(jiti@2.6.1)(lightningcss@1.30.2)
       vitest: 4.0.15(@types/node@20.19.27)(@vitest/ui@4.0.15)(happy-dom@20.0.11)(jiti@2.6.1)(lightningcss@1.30.2)
+
+  '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
+    dependencies:
+      '@testing-library/dom': 10.4.1
 
   '@types/aria-query@5.0.4': {}
 

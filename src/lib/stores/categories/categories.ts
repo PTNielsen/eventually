@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import * as categoryApi from "$lib/api/categories"
+import * as categoryApi from "$lib/api/categories/categories"
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from "$lib/types/models"
 
 interface CategoriesState {

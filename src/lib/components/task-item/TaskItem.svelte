@@ -1,7 +1,8 @@
 <script lang="ts">
 import { ask } from "@tauri-apps/plugin-dialog"
-import { tasksStore } from "$lib/stores/tasks"
-import type { TaskTree } from "$lib/types/models"
+import { tasksStore } from "$lib/stores/tasks/tasks"
+import type { TaskTree } from "$lib/types/models.d"
+import { validateTaskTitle } from "$lib/utils/validation/validation"
 
 export let taskTree: TaskTree
 export let depth = 0
@@ -12,6 +13,17 @@ $: hasSubtasks = taskTree.subtasks && taskTree.subtasks.length > 0
 let expanded = true
 let showSubtaskInput = false
 let subtaskTitle = ""
+let subtaskError: string | null = null
+
+// Validate subtask title
+$: {
+  if (subtaskTitle) {
+    const validation = validateTaskTitle(subtaskTitle)
+    subtaskError = validation.valid ? null : (validation.error ?? null)
+  } else {
+    subtaskError = null
+  }
+}
 
 // Calculate deadline status
 function getDeadlineInfo(dueDate: number | null) {
@@ -79,10 +91,7 @@ async function handleDelete() {
       await tasksStore.deleteTask(task.id)
     } catch (error) {
       console.error("Failed to delete task:", error)
-      await ask("Failed to delete task. Please try again.", {
-        title: "Error",
-        kind: "error",
-      })
+      // Error toast now handled by store
     }
   }
 }
@@ -111,7 +120,7 @@ function getPriorityClass(priority: string): string {
 }
 
 async function handleAddSubtask() {
-  if (!subtaskTitle.trim()) return
+  if (!subtaskTitle.trim() || subtaskError) return
 
   try {
     await tasksStore.createTask({
@@ -124,11 +133,12 @@ async function handleAddSubtask() {
 
     // Reset and close input
     subtaskTitle = ""
+    subtaskError = null
     showSubtaskInput = false
     expanded = true
   } catch (error) {
     console.error("Failed to create subtask:", error)
-    alert("Failed to create subtask. Please try again.")
+    // Error toast now handled by store
   }
 }
 
@@ -225,30 +235,42 @@ function toggleSubtaskInput() {
 
       <!-- Subtask Input -->
       {#if showSubtaskInput}
-        <div class="mt-2 flex gap-2">
-          <input
-            id="subtask-{task.id}"
-            type="text"
-            bind:value={subtaskTitle}
-            on:keydown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                handleAddSubtask()
-              } else if (e.key === 'Escape') {
-                showSubtaskInput = false
-                subtaskTitle = ''
-              }
-            }}
-            placeholder="subtask title..."
-            class="terminal-input text-sm flex-1"
-          />
-          <button
-            class="terminal-button terminal-button-primary text-xs px-3"
-            on:click={handleAddSubtask}
-            disabled={!subtaskTitle.trim()}
-          >
-            add
-          </button>
+        <div class="mt-2">
+          <div class="flex gap-2">
+            <input
+              id="subtask-{task.id}"
+              type="text"
+              bind:value={subtaskTitle}
+              on:keydown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddSubtask()
+                } else if (e.key === 'Escape') {
+                  showSubtaskInput = false
+                  subtaskTitle = ''
+                  subtaskError = null
+                }
+              }}
+              placeholder="subtask title..."
+              class="terminal-input text-sm flex-1"
+              class:border-terminal-red={subtaskError}
+              aria-label="Subtask title"
+              aria-invalid={!!subtaskError}
+              aria-describedby={subtaskError ? `subtask-error-${task.id}` : undefined}
+              maxlength="500"
+            />
+            <button
+              class="terminal-button terminal-button-primary text-xs px-3"
+              on:click={handleAddSubtask}
+              disabled={!subtaskTitle.trim() || !!subtaskError}
+              aria-label="Add subtask"
+            >
+              add
+            </button>
+          </div>
+          {#if subtaskError}
+            <p id="subtask-error-{task.id}" class="text-terminal-red text-xs mt-1" role="alert">{subtaskError}</p>
+          {/if}
         </div>
       {/if}
     </div>
