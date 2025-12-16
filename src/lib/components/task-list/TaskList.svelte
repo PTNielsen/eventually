@@ -122,7 +122,7 @@ function findTaskTree(taskId: number): TaskTree | null {
               <span class="text-xs text-terminal-brightBlack">({visibleTasks.length})</span>
             </div>
             <div class="space-y-2">
-              {#each visibleTasks as task}
+              {#each visibleTasks as task (task.id)}
                 {@const taskTree = findTaskTree(task.id)}
                 {#if taskTree}
                   <TaskItem {taskTree} />
@@ -139,7 +139,7 @@ function findTaskTree(taskId: number): TaskTree | null {
   <!-- Tree View (Hierarchical) -->
   {:else}
     <div class="space-y-2">
-      {#each $sortedTaskTree.filter((t) => $uiStore.showCompleted || !t.is_done) as taskTree}
+      {#each $sortedTaskTree.filter((t) => $uiStore.showCompleted || !t.is_done) as taskTree (taskTree.id)}
         <TaskItem {taskTree} />
       {/each}
     </div>

@@ -278,7 +278,7 @@ function toggleSubtaskInput() {
 
   {#if hasSubtasks && expanded}
     <div class="mt-2">
-      {#each taskTree.subtasks as subtask}
+      {#each taskTree.subtasks as subtask (subtask.id)}
         <svelte:self taskTree={subtask} depth={depth + 1} />
       {/each}
     </div>
